@@ -1,5 +1,7 @@
 package com.pluralsight;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import java.sql.*;
 import java.util.Scanner;
 
@@ -17,6 +19,12 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
+        BasicDataSource dataSource = new BasicDataSource();
+
+        dataSource.setUrl("jdbc:mysql://localhost:3306/northwind");
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+
         while (true) {
             System.out.println("What do you want to do?");
             System.out.println("1) Display all products");
@@ -29,13 +37,13 @@ public class Main {
 
             switch (choice) {
                 case 1:
-                    displayAllProducts(username, password);
+                    displayAllProducts(dataSource);
                     break;
                 case 2:
-                    displayAllCustomers(username, password);
+                    displayAllCustomers(dataSource);
                     break;
                 case 3:
-                    displayAllCategories(username, password);
+                    displayAllCategories(dataSource);
                     break;
                 case 0:
                     System.out.println("Exiting...");
@@ -47,13 +55,9 @@ public class Main {
         }
     }
 
-    private static void displayAllCategories(String username, String password) {
+    private static void displayAllCategories(BasicDataSource dataSource) {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            try (Connection connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/northwind",
-                    username,
-                    password);
+            try (Connection connection = dataSource.getConnection();
                  PreparedStatement statement = connection.prepareStatement(
                          "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID");
                  ResultSet resultSet = statement.executeQuery()) {
@@ -72,7 +76,7 @@ public class Main {
                 displayProductsInCategory(connection, categoryId);
 
             }
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -101,14 +105,13 @@ public class Main {
         }
     }
 
-    private static void displayAllProducts(String username, String password) {
+    private static void displayAllProducts(BasicDataSource dataSource) {
         String query = "SELECT ProductID, ProductName, UnitPrice, UnitsInStock FROM products";
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Use try-with-resources for automatic resource management
-            try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password);
+            try (Connection connection = dataSource.getConnection();
                  PreparedStatement statement = connection.prepareStatement(query);
                  ResultSet results = statement.executeQuery()) {
 
@@ -125,20 +128,19 @@ public class Main {
                     System.out.println("-----------------------------------------");
                 }
             }
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
 
-    private static void displayAllCustomers(String username, String password) {
+    private static void displayAllCustomers(BasicDataSource dataSource) {
         String query = "SELECT ContactName, CompanyName, City, Country, Phone FROM Customers ORDER BY Country";
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Use try-with-resources for automatic resource management
-            try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password);
+            try (Connection connection = dataSource.getConnection();
                  PreparedStatement statement = connection.prepareStatement(query);
                  ResultSet results = statement.executeQuery()) {
 
@@ -157,7 +159,7 @@ public class Main {
                     System.out.println("-----------------------------------------");
                 }
             }
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
